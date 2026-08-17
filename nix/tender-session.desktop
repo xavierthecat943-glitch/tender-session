@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Tender Session
+Comment=A clear and calm NixOS session installer
+Exec=tender-session
+TryExec=tender-session
+X-Ubuntu-Session=tender-session
+Icon=utilities-terminal
