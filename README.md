@@ -15,56 +15,133 @@ tender-session is a minimal NixOS desktop session (like KDE Plasma or Hyprland) 
 
 ## Installation
 
-### Option 1: Using the NixOS Module (Recommended)
+### Quick Start (Recommended)
 
-Add this to your `flake.nix`:
+The simplest way to get tender-session is through your NixOS configuration using Flakes.
 
-```nix
-inputs = {
-  tender-session.url = "github:xavierthecat943-glitch/tender-session";
-  tender-session.inputs.nixpkgs.follows = "nixpkgs";
-};
-```
+#### Prerequisites
+- NixOS with Flakes enabled
+- `git` in your `environment.systemPackages`
 
-Then in your `configuration.nix`:
+#### Step 1: Update your `flake.nix`
+
+Add tender-session to your inputs:
 
 ```nix
 {
-  imports = [
-    inputs.tender-session.nixosModules.default
-  ];
-  
-  services.tender-session.enable = true;
+  description = "My NixOS configuration";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    tender-session.url = "github:xavierthecat943-glitch/tender-session";
+    tender-session.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs = { self, nixpkgs, tender-session, ... }: {
+    nixosConfigurations.your-hostname = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit tender-session; };
+      modules = [
+        ./configuration.nix
+      ];
+    };
+  };
 }
 ```
 
-### Option 2: Manual Installation
+#### Step 2: Update your `configuration.nix`
 
-1. Clone the repository:
-```bash
-git clone https://github.com/xavierthecat943-glitch/tender-session
-cd tender-session
-```
+Add the module and enable the session:
 
-2. Build and install:
-```bash
-nix flake show
-nix profile install .
-```
-
-3. Add to your NixOS configuration:
 ```nix
-environment.systemPackages = with pkgs; [
-  tender-session
-];
+{ config, pkgs, tender-session, ... }:
+
+{
+  imports = [
+    tender-session.nixosModules.default
+  ];
+
+  # Enable tender-session
+  services.tender-session.enable = true;
+
+  # Make sure git is available (you likely already have this)
+  environment.systemPackages = with pkgs; [
+    git
+  ];
+}
 ```
+
+#### Step 3: Rebuild and switch
+
+```bash
+sudo nixos-rebuild switch --flake .#your-hostname
+```
+
+---
+
+### Alternative: Using `environment.systemPackages`
+
+If you prefer to add it as a simple package without the full module:
+
+1. Build the package locally:
+```bash
+git clone https://github.com/xavierthecat943-glitch/tender-session /tmp/tender-session
+cd /tmp/tender-session
+nix flake show
+```
+
+2. In your `configuration.nix`, add the path to your packages:
+
+```nix
+{ config, pkgs, ... }:
+
+{
+  # Add git to your environment
+  environment.systemPackages = with pkgs; [
+    git
+  ];
+
+  # Build and add tender-session from the local path
+  environment.systemPackages = with pkgs; [
+    (pkgs.callPackage /path/to/tender-session/nix/default.nix { })
+  ];
+}
+```
+
+Then rebuild:
+```bash
+sudo nixos-rebuild switch
+```
+
+---
 
 ## Usage
 
-1. Reboot your system
-2. At the login screen, select **Tender Session** from the session dropdown
-3. Log in with your credentials
-4. kitty terminal will launch
+1. **Reboot your system**
+   ```bash
+   sudo reboot
+   ```
+
+2. **At the login screen**, select **Tender Session** from the session dropdown menu (usually in the bottom-left corner)
+
+3. **Log in** with your credentials
+
+4. **kitty terminal** will launch automatically
+
+---
+
+## Troubleshooting
+
+### Session not appearing in login screen
+- Make sure `services.xserver.enable` is `true` in your configuration
+- Ensure `services.dbus.enable` is `true`
+- Rebuild with `sudo nixos-rebuild switch`
+
+### Terminal not launching
+- Check that `kitty` is in your `environment.systemPackages`
+- Verify the session logs: `journalctl -xe`
+
+---
 
 ## Development
 
