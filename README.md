@@ -162,6 +162,31 @@ sudo nixos-rebuild switch
 
 ## Common Problems
 
+### Error: `does not provide attribute 'packages.x86_64-linux.nixosConfigurations.nixos'`
+
+**Symptom:**
+```
+error: flake 'path:/home/xavier' does not provide attribute 'packages.x86_64-linux.nixosConfigurations.nixos'
+```
+
+**Cause:**
+Your flake output structure doesn't match the expected format. This happens when the `nixosModules` export in tender-session isn't properly available.
+
+**Solution:**
+Make sure you've pulled the latest version of tender-session (commit `0ed73082` or later), which properly exports `nixosModules`. Then:
+
+1. Update your flake lock file:
+```bash
+nix flake update
+```
+
+2. Rebuild:
+```bash
+sudo nixos-rebuild switch --flake .#your-hostname
+```
+
+---
+
 ### Error: `undefined variable 'tender-session'`
 
 **Symptom:**
@@ -259,24 +284,6 @@ git add .
 git commit -m "Update configuration"
 sudo nixos-rebuild switch --flake .#your-hostname
 ```
-
----
-
-## Troubleshooting
-
-### Session not appearing in login screen
-- Make sure `services.xserver.enable` is `true` in your configuration
-- Ensure `services.dbus.enable` is `true`
-- Rebuild with `sudo nixos-rebuild switch`
-
-### Terminal not launching
-- Check that `kitty` is in your `environment.systemPackages`
-- Verify the session logs: `journalctl -xe`
-- Check X11 is properly configured: `echo $DISPLAY`
-
-### "Command not found" errors
-- Ensure you've run `sudo nixos-rebuild switch` after updating configuration
-- Check that all dependencies are listed in your configuration
 
 ---
 
