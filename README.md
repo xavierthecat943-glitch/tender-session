@@ -13,6 +13,26 @@ tender-session is a minimal NixOS desktop session (like KDE Plasma or Hyprland) 
 - **Functionality**: Focus on getting the session working reliably
 - **Minimal**: Kitty terminal only, no graphical overhead
 
+## Dependencies
+
+### Required
+- **NixOS** - The distribution this session is built for
+- **X11/Wayland** - Display server (via `services.xserver`)
+- **D-Bus** - System message bus (automatically enabled)
+- **kitty** - Terminal emulator
+
+### Automatically Handled
+The following are automatically installed when you enable tender-session:
+- `dbus` - Session and system bus
+- Base display server libraries
+
+### Your Configuration Needs
+- **Flakes enabled** (if using the recommended method)
+- **git** (optional, but recommended for cloning repositories)
+- `services.xserver.enable = true` in your NixOS configuration
+
+---
+
 ## Installation
 
 ### Quick Start (Recommended)
@@ -21,7 +41,8 @@ The simplest way to get tender-session is through your NixOS configuration using
 
 #### Prerequisites
 - NixOS with Flakes enabled
-- `git` in your `environment.systemPackages`
+- `git` in your `environment.systemPackages` (optional but recommended)
+- X11 enabled (`services.xserver.enable = true`)
 
 #### Step 1: Update your `flake.nix`
 
@@ -61,10 +82,13 @@ Add the module and enable the session:
     tender-session.nixosModules.default
   ];
 
+  # Enable X11 (required)
+  services.xserver.enable = true;
+
   # Enable tender-session
   services.tender-session.enable = true;
 
-  # Make sure git is available (you likely already have this)
+  # Make sure git is available (optional but recommended)
   environment.systemPackages = with pkgs; [
     git
   ];
@@ -96,7 +120,13 @@ nix flake show
 { config, pkgs, ... }:
 
 {
-  # Add git to your environment
+  # Enable X11 (required)
+  services.xserver.enable = true;
+
+  # Enable D-Bus (required)
+  services.dbus.enable = true;
+
+  # Add git to your environment (optional)
   environment.systemPackages = with pkgs; [
     git
   ];
@@ -140,6 +170,11 @@ sudo nixos-rebuild switch
 ### Terminal not launching
 - Check that `kitty` is in your `environment.systemPackages`
 - Verify the session logs: `journalctl -xe`
+- Check X11 is properly configured: `echo $DISPLAY`
+
+### "Command not found" errors
+- Ensure you've run `sudo nixos-rebuild switch` after updating configuration
+- Check that all dependencies are listed in your configuration
 
 ---
 
