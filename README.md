@@ -160,6 +160,108 @@ sudo nixos-rebuild switch
 
 ---
 
+## Common Problems
+
+### Error: `undefined variable 'tender-session'`
+
+**Symptom:**
+```
+error: undefined variable 'tender-session'
+at /etc/nixos/configuration.nix:12:7:
+```
+
+**Cause:**
+You haven't passed `tender-session` as a `specialArg` in your `flake.nix`, or your flake configuration doesn't properly export it.
+
+**Solution:**
+1. Make sure your `flake.nix` includes `specialArgs`:
+```nix
+outputs = { self, nixpkgs, tender-session, ... }: {
+  nixosConfigurations.your-hostname = nixpkgs.lib.nixosSystem {
+    system = "x86_64-linux";
+    specialArgs = { inherit tender-session; };  # ← This line is required
+    modules = [
+      ./configuration.nix
+    ];
+  };
+};
+```
+
+2. Then rebuild:
+```bash
+sudo nixos-rebuild switch --flake .#your-hostname
+```
+
+---
+
+### Session not appearing in login screen
+
+**Symptom:**
+You log in but don't see "Tender Session" as an option in the session dropdown.
+
+**Cause:**
+X11 or D-Bus is not enabled, or the session wasn't properly registered.
+
+**Solution:**
+1. Make sure `services.xserver.enable` is `true` in your configuration
+2. Ensure `services.dbus.enable` is `true`
+3. Rebuild with `sudo nixos-rebuild switch`
+4. Check the display manager logs: `journalctl -u display-manager -n 50`
+
+---
+
+### Terminal not launching
+
+**Symptom:**
+You select Tender Session and log in, but nothing happens or the screen is black.
+
+**Cause:**
+kitty is not installed, or the session starter script is failing.
+
+**Solution:**
+1. Check that `kitty` is in your `environment.systemPackages` or enabled by the module
+2. Verify the session logs: `journalctl -xe`
+3. Check X11 is properly configured: `echo $DISPLAY` (should show something like `:0`)
+4. Try running kitty manually: `kitty` (to see if it's a PATH issue)
+
+---
+
+### "Command not found" or dependency errors after rebuild
+
+**Symptom:**
+You see errors about missing packages or commands after running `nixos-rebuild switch`.
+
+**Cause:**
+The configuration didn't fully apply, or you're missing required dependencies.
+
+**Solution:**
+1. Ensure you've run `sudo nixos-rebuild switch` after updating configuration (not just `nixos-rebuild`)
+2. Check that all dependencies are listed in your configuration
+3. Try a full rebuild: `sudo nixos-rebuild switch --recreate-lock-file`
+4. If using flakes, make sure to commit changes: `git add . && git commit -m "update"`
+
+---
+
+### Git tree is dirty error
+
+**Symptom:**
+```
+warning: Git tree '/etc/nixos' is dirty
+```
+
+**Cause:**
+You have uncommitted changes in your NixOS configuration directory when using flakes.
+
+**Solution:**
+```bash
+cd /path/to/your/nixos-config
+git add .
+git commit -m "Update configuration"
+sudo nixos-rebuild switch --flake .#your-hostname
+```
+
+---
+
 ## Troubleshooting
 
 ### Session not appearing in login screen
