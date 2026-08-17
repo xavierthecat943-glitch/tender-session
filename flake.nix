@@ -22,7 +22,10 @@
         };
       }
     ) // {
-      # NixOS module for easy integration
+      # NixOS module for easy integration into user configs
       nixosModules.default = import ./nix/module.nix;
+      
+      # Also export as a more discoverable path
+      nixosModules.tender-session = import ./nix/module.nix;
     };
 }
