@@ -10,7 +10,11 @@ in
   options.services.tender-session = {
     enable = mkEnableOption "tender-session desktop session";
 
-    package = mkPackageOption pkgs "tender-session" { };
+    package = mkOption {
+      type = types.package;
+      default = tender-session-pkg;
+      description = "The tender-session package to use";
+    };
   };
 
   config = mkIf cfg.enable {
