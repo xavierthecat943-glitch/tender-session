@@ -1,5 +1,5 @@
 {
-  description = "tender-session - A clear and calm NixOS session installer";
+  description = "tender-session - A clear and calm NixOS desktop session";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -21,5 +21,8 @@
           ];
         };
       }
-    );
+    ) // {
+      # NixOS module for easy integration
+      nixosModules.default = import ./nix/module.nix;
+    };
 }
